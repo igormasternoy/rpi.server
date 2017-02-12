@@ -3,7 +3,6 @@ package com.masternoy.rpi.server.protocol;
 import org.apache.commons.codec.binary.Hex;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class XBeePacket {
 	private int length = -1;
@@ -13,118 +12,129 @@ public class XBeePacket {
 	private byte receiveOpts = -1;
 	private byte numberOfSampleSets = -1;
 	private short digitalSampleSets = -1;
+	private short digitalChannelMask = -1;
 	private byte analogChannelMask = -1;
 	private short digitalSampleData = -1;
 	private byte analogSampleData = -1;
-	private byte pinsADC = -1;
 	private byte checkSum = -1;
 	private ByteBuf payload;
-
-	public XBeePacket() {
-		payload = Unpooled.buffer(Constants.Protocol.MAX_LENGTH);
-	}
 
 	public ByteBuf getPayload() {
 		return payload;
 	}
 
-	public void setPayload(ByteBuf payload) {
-		this.payload = payload;
+	public void setPayload(ByteBuf pld) {
+		payload = pld;
+		if (payload.readableBytes() > 1) {
+			setFrameType(payload.readByte());
+			setSerialAddress(payload.readLong());
+			setSourceNetworkAddress(payload.readShort());
+			setReceiveOpts(payload.readByte());
+			setNumberOfSampleSets(payload.readByte());
+			setDigitalChannelMask(payload.readShort());
+			setAnalogChannelMask(payload.readByte());
+			setDigitalSampleData(payload.readShort());
+			if (getAnalogChannelMask() != 0) {
+				// READ UNTIL CHECKSUM
+				setAnalogSampleData(payload.readByte());
+			}
+			setCheckSum(payload.readByte());
+		}
 	}
 
-	public Integer getLength() {
+	public int getLength() {
 		return length;
 	}
 
-	public void setLength(Integer length) {
+	public void setLength(int length) {
 		this.length = length;
 	}
 
-	public Byte getFrameType() {
+	public byte getFrameType() {
 		return frameType;
 	}
 
-	public void setFrameType(Byte frameType) {
+	public void setFrameType(byte frameType) {
 		this.frameType = frameType;
 	}
 
-	public Long getSerialAddress() {
+	public long getSerialAddress() {
 		return serialAddress;
 	}
 
-	public void setSerialAddress(Long serialAddress) {
+	public void setSerialAddress(long serialAddress) {
 		this.serialAddress = serialAddress;
 	}
 
-	public Short getSourceNetworkAddress() {
+	public short getSourceNetworkAddress() {
 		return sourceNetworkAddress;
 	}
 
-	public void setSourceNetworkAddress(Short sourceNetworkAddress) {
+	public void setSourceNetworkAddress(short sourceNetworkAddress) {
 		this.sourceNetworkAddress = sourceNetworkAddress;
 	}
 
-	public Byte getReceiveOpts() {
+	public byte getReceiveOpts() {
 		return receiveOpts;
 	}
 
-	public void setReceiveOpts(Byte receiveOpts) {
+	public void setReceiveOpts(byte receiveOpts) {
 		this.receiveOpts = receiveOpts;
 	}
 
-	public Byte getNumberOfSampleSets() {
+	public byte getNumberOfSampleSets() {
 		return numberOfSampleSets;
 	}
 
-	public void setNumberOfSampleSets(Byte numberOfSampleSets) {
+	public void setNumberOfSampleSets(byte numberOfSampleSets) {
 		this.numberOfSampleSets = numberOfSampleSets;
 	}
 
-	public Short getDigitalSampleSets() {
+	public void setDigitalChannelMask(short digitalChannelMask) {
+		this.digitalChannelMask = digitalChannelMask;
+	}
+
+	public short getDigitalChannelMask() {
+		return digitalChannelMask;
+	}
+
+	public short getDigitalSampleSets() {
 		return digitalSampleSets;
 	}
 
-	public void setDigitalSampleSets(Short digitalSampleSets) {
+	public void setDigitalSampleSets(short digitalSampleSets) {
 		this.digitalSampleSets = digitalSampleSets;
 	}
 
-	public Byte getAnalogChannelMask() {
+	public byte getAnalogChannelMask() {
 		return analogChannelMask;
 	}
 
-	public void setAnalogChannelMask(Byte analogChannelMask) {
+	public void setAnalogChannelMask(byte analogChannelMask) {
 		this.analogChannelMask = analogChannelMask;
 	}
 
-	public Short getDigitalSampleData() {
+	public short getDigitalSampleData() {
 		return digitalSampleData;
 	}
 
-	public void setDigitalSampleData(Short digitalSampleData) {
+	public void setDigitalSampleData(short digitalSampleData) {
 		this.digitalSampleData = digitalSampleData;
 	}
 
-	public Byte getAnalogSampleData() {
+	public byte getAnalogSampleData() {
 		return analogSampleData;
 	}
 
-	public void setAnalogSampleData(Byte analogSampleData) {
+	public void setAnalogSampleData(byte analogSampleData) {
 		this.analogSampleData = analogSampleData;
 	}
 
-	public Byte getPinsADC() {
-		return pinsADC;
-	}
-
-	public void setPinsADC(Byte pinsADC) {
-		this.pinsADC = pinsADC;
-	}
-
-	public Byte getCheckSum() {
+	public byte getCheckSum() {
 		return checkSum;
 	}
 
-	public void setCheckSum(Byte checkSum) {
+	public void setCheckSum(byte checkSum) {
 		this.checkSum = checkSum;
 	}
 
@@ -133,8 +143,32 @@ public class XBeePacket {
 		StringBuilder builder = new StringBuilder();
 		builder.append("XBeePacket [length=");
 		builder.append(length);
-		builder.append(", \npayload=");
-		builder.append(Hex.encodeHexString(payload.array()));
+		builder.append(", frameType=");
+		builder.append(String.format("%02x", frameType));
+		builder.append(", serialAddress=");
+		builder.append(String.format("%02x", serialAddress));
+		builder.append(", sourceNetworkAddress=");
+		builder.append(String.format("%02x", sourceNetworkAddress));
+		builder.append(", receiveOpts=");
+		builder.append(receiveOpts);
+		builder.append(", numberOfSampleSets=");
+		builder.append(numberOfSampleSets);
+		builder.append(", digitalSampleSets=");
+		builder.append(digitalSampleSets);
+		builder.append(", digitalChannelMask=");
+		builder.append(String.format("%02x", digitalChannelMask));
+		builder.append(", analogChannelMask=");
+		builder.append(String.format("%02x", analogChannelMask));
+		builder.append(", digitalSampleData=");
+		builder.append(String.format("%02x", digitalSampleData));
+		builder.append(", analogSampleData=");
+		builder.append(String.format("%02x", analogSampleData));
+		builder.append(", checkSum=");
+		builder.append(String.format("%02x", checkSum));
+		if (payload != null) {
+			builder.append(", payload=");
+			builder.append(Hex.encodeHexString(payload.array()));
+		}
 		builder.append("]");
 		return builder.toString();
 	}

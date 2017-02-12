@@ -6,6 +6,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.ByteProcessor;
@@ -54,13 +55,14 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 				return null;
 			}
 			packet = new XBeePacket();
-			//needed for test purposes
+			// needed for test purposes
 			byte[] low = new byte[1];
 			byte[] high = new byte[1];
 			low[0] = buffer.readByte();
 			high[0] = buffer.readByte();
 			log.trace(Hex.encodeHexString(low) + "" + Hex.encodeHexString(high));
-			packet.setLength(assemblyShort(low[0], high[0]));
+			//Checksum is the always the last byte
+			packet.setLength(assemblyShort(low[0], high[0])+1);
 			currentState = State.READ_BODY;
 		}
 
@@ -70,7 +72,10 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 				// PACKET IS NOT FULL
 				return null;
 			}
-			buffer.readBytes(packet.getPayload(), 0, packet.getLength());
+			ByteBuf buf = Unpooled.buffer(packet.getLength());
+			buffer.readBytes(buf, 0, packet.getLength());
+			buf.writerIndex(packet.getLength());
+			packet.setPayload(buf);
 			buffer.discardReadBytes();
 			currentState = State.START;
 			return packet;

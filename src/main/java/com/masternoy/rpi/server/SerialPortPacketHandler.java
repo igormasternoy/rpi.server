@@ -12,7 +12,7 @@ public class SerialPortPacketHandler extends SimpleChannelInboundHandler<XBeePac
 
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, XBeePacket msg) throws Exception {
-		log.info("Serial port message: " + msg);
+		log.info("Serial port message received: " + msg);
 	}
 
 	@Override
