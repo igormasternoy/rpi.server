@@ -1,41 +1,89 @@
 package com.masternoy.rpi.server.protocol;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.log4j.Logger;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.util.ByteProcessor;
 
 /**
  * @author imasternoy
  */
-public class XBeeProtocolReader {
-	public static final byte SIGNATURE = (byte) 0x7e;
+public class XBeeProtocolReader extends ByteToMessageDecoder {
+	private static final Logger log = Logger.getLogger(XBeeProtocolReader.class);
 
-	ByteBuffer payload;
-	InputStream inputStream;
+	XBeePacket packet;
 	State currentState;
 
-	enum State {
-		START, END
+	private enum State {
+		START, READ_BODY_LENGTH, READ_BODY, END
 	}
 
-	public XBeeProtocolReader(InputStream in) {
-		payload = ByteBuffer.allocate(100);
-		inputStream = in;
+	public XBeeProtocolReader() {
 		currentState = State.START;
 	}
 
-	public XBeePacket getPacket() {
+	@Override
+	protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+		Object decoded = decode(ctx, in);
+		if (decoded != null) {
+			out.add(decoded);
+		}
+	}
+
+	protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+		if (currentState == State.START) {
+			final int eol = findPacketStart(buffer);
+			if (eol < 0) {
+				log.trace("Packet without signature found");
+				return null;
+			}
+			log.trace("Reader index:" + buffer.readerIndex());
+			buffer.readerIndex(eol + 1);
+			log.trace("Reader index:" + buffer.readerIndex());
+			currentState = State.READ_BODY_LENGTH;
+		}
+
+		if (currentState == State.READ_BODY_LENGTH) {
+			if (buffer.readableBytes() < 2) {
+				log.trace("Not enough bytes to construct packet length");
+				return null;
+			}
+			packet = new XBeePacket();
+			//needed for test purposes
+			byte[] low = new byte[1];
+			byte[] high = new byte[1];
+			low[0] = buffer.readByte();
+			high[0] = buffer.readByte();
+			log.trace(Hex.encodeHexString(low) + "" + Hex.encodeHexString(high));
+			packet.setLength(assemblyShort(low[0], high[0]));
+			currentState = State.READ_BODY;
+		}
+
+		if (currentState == State.READ_BODY) {
+			// LENGTH IS KNOWN
+			if (buffer.readableBytes() < packet.getLength()) {
+				// PACKET IS NOT FULL
+				return null;
+			}
+			buffer.readBytes(packet.getPayload(), 0, packet.getLength());
+			buffer.discardReadBytes();
+			currentState = State.START;
+			return packet;
+		}
 		return null;
 	}
 
-	public XBeePacket readNextPacket(int lenght) {
-		if (currentState == State.START) {
-			byte[] available = new byte[lenght];
-//			inputStream.read(available, 0, lenght);
-		}
-		return null;
+	private static int assemblyShort(int i2, int i1) {
+		return (int) (i1 + (i2 << 8));
+	}
+
+	private static int findPacketStart(final ByteBuf buffer) {
+		return buffer.forEachByte(new ByteProcessor.IndexOfProcessor(Constants.Protocol.SIGNATURE));
 	}
 
 }
