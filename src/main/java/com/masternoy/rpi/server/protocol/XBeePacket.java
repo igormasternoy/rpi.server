@@ -5,10 +5,10 @@ import org.apache.commons.codec.binary.Hex;
 import io.netty.buffer.ByteBuf;
 
 public class XBeePacket {
-	private int length = -1;
+	private short length = -1;
 	private byte frameType = -1;
-	private long serialAddress = -1;
-	private short sourceNetworkAddress = -1;
+	private byte[] serialAddress = new byte[8];
+	private byte[] sourceNetworkAddress = new byte[2];
 	private byte receiveOpts = -1;
 	private byte numberOfSampleSets = -1;
 	private short digitalSampleSets = -1;
@@ -27,8 +27,8 @@ public class XBeePacket {
 		payload = pld;
 		if (payload.readableBytes() > 1) {
 			setFrameType(payload.readByte());
-			setSerialAddress(payload.readLong());
-			setSourceNetworkAddress(payload.readShort());
+			payload.readBytes(serialAddress, 0, 8);
+			payload.readBytes(sourceNetworkAddress,0,2);
 			setReceiveOpts(payload.readByte());
 			setNumberOfSampleSets(payload.readByte());
 			setDigitalChannelMask(payload.readShort());
@@ -42,11 +42,11 @@ public class XBeePacket {
 		}
 	}
 
-	public int getLength() {
+	public short getLength() {
 		return length;
 	}
 
-	public void setLength(int length) {
+	public void setLength(short length) {
 		this.length = length;
 	}
 
@@ -58,19 +58,19 @@ public class XBeePacket {
 		this.frameType = frameType;
 	}
 
-	public long getSerialAddress() {
+	public byte[] getSerialAddress() {
 		return serialAddress;
 	}
 
-	public void setSerialAddress(long serialAddress) {
+	public void setSerialAddress(byte[] serialAddress) {
 		this.serialAddress = serialAddress;
 	}
 
-	public short getSourceNetworkAddress() {
+	public byte[] getSourceNetworkAddress() {
 		return sourceNetworkAddress;
 	}
 
-	public void setSourceNetworkAddress(short sourceNetworkAddress) {
+	public void setSourceNetworkAddress(byte[] sourceNetworkAddress) {
 		this.sourceNetworkAddress = sourceNetworkAddress;
 	}
 
@@ -145,10 +145,10 @@ public class XBeePacket {
 		builder.append(length);
 		builder.append(", frameType=");
 		builder.append(String.format("%02x", frameType));
-		builder.append(", serialAddress=");
-		builder.append(String.format("%02x", serialAddress));
-		builder.append(", sourceNetworkAddress=");
-		builder.append(String.format("%02x", sourceNetworkAddress));
+//		builder.append(", serialAddress=");
+//		builder.append(String.format("%02x", serialAddress));
+//		builder.append(", sourceNetworkAddress=");
+//		builder.append(String.format("%02x", sourceNetworkAddress));
 		builder.append(", receiveOpts=");
 		builder.append(receiveOpts);
 		builder.append(", numberOfSampleSets=");

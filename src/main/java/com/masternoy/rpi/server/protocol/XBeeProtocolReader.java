@@ -62,7 +62,7 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 			high[0] = buffer.readByte();
 			log.trace(Hex.encodeHexString(low) + "" + Hex.encodeHexString(high));
 			//Checksum is the always the last byte
-			packet.setLength(assemblyShort(low[0], high[0])+1);
+			packet.setLength((short) (assemblyShort(low[0], high[0])+1));
 			currentState = State.READ_BODY;
 		}
 
@@ -72,9 +72,10 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 				// PACKET IS NOT FULL
 				return null;
 			}
-			ByteBuf buf = Unpooled.buffer(packet.getLength());
-			buffer.readBytes(buf, 0, packet.getLength());
-			buf.writerIndex(packet.getLength());
+			int length = packet.getLength(); //checkSumByte
+			ByteBuf buf = Unpooled.buffer(length);
+			buffer.readBytes(buf, 0, length);
+			buf.writerIndex(length);
 			packet.setPayload(buf);
 			buffer.discardReadBytes();
 			currentState = State.START;
@@ -83,8 +84,8 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 		return null;
 	}
 
-	private static int assemblyShort(int i2, int i1) {
-		return (int) (i1 + (i2 << 8));
+	private static short assemblyShort(int i2, int i1) {
+		return (short) (i1 + (i2 << 8));
 	}
 
 	private static int findPacketStart(final ByteBuf buffer) {
