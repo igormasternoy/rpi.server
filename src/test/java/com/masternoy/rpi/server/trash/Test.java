@@ -1,4 +1,4 @@
-package com.masternoy.rpi.server;
+package com.masternoy.rpi.server.trash;
 
 import static com.masternoy.rpi.server.protocol.Constants.Protocol.SIGNATURE;
 
