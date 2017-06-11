@@ -11,15 +11,15 @@ public class ConnectionManager {
 	
 	RxtxChannel ctx;
 
-	public void setCtx(RxtxChannel ctx) {
+	void setCtx(RxtxChannel ctx) {
 		this.ctx = ctx;
 	}
 	
-	public RxtxChannel getCtx() {
+	RxtxChannel getCtx() {
 		return ctx;
 	}
 	
-	public ChannelFuture writeToChannel(XBeeCommandRequest command){
+	ChannelFuture writeToChannel(XBeeCommandRequest command){
 		return ctx.writeAndFlush(command);
 	}
 

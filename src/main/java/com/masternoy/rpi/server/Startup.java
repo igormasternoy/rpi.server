@@ -6,6 +6,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.masternoy.rpi.server.guice.SerialPortPacketHandlerFactory;
 import com.masternoy.rpi.server.guice.StartupModule;
+import com.masternoy.rpi.server.handlers.XBeePacketStrategyHandler;
 import com.masternoy.rpi.server.protocol.XBeeProtocolReader;
 import com.masternoy.rpi.server.protocol.XBeeProtocolWriter;
 
@@ -16,13 +17,12 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.oio.OioEventLoopGroup;
 import io.netty.channel.rxtx.RxtxChannel;
 import io.netty.channel.rxtx.RxtxDeviceAddress;
-import io.netty.handler.codec.string.StringDecoder;
 
 public class Startup {
 	private final static String PORT = "/dev/cu.usbserial-A50285BI";
 	private static final Logger log = Logger.getLogger(Startup.class);
 	
-	SerialPortPacketHandler handler;
+	XBeePacketStrategyHandler handler;
 	
 	public static void main(String[] args) throws InterruptedException {
 		//GUICE FIRST
@@ -44,6 +44,7 @@ public class Startup {
 					ch.pipeline().addLast(//
 							new XBeeProtocolReader(), //
 							new XBeeProtocolWriter(),
+							factory.getResponseHandler(),
 							factory.getPacketHandler());
 				}
 			});

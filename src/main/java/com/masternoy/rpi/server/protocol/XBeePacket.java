@@ -3,10 +3,13 @@ package com.masternoy.rpi.server.protocol;
 import org.apache.commons.codec.binary.Hex;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class XBeePacket {
 	private short length = -1;
 	private byte frameType = -1;
+	private byte frameId = -1;
+	private byte[] atCommand = new byte[2];
 	private byte[] serialAddress = new byte[8];
 	private byte[] sourceNetworkAddress = new byte[2];
 	private byte receiveOpts = -1;
@@ -23,12 +26,20 @@ public class XBeePacket {
 		return payload;
 	}
 
+	// TODO: [imasternoy] fix via state machine
 	public void setPayload(ByteBuf pld) {
 		payload = pld;
 		if (payload.readableBytes() > 1) {
 			setFrameType(payload.readByte());
+			if (frameType == (byte) 0x97) { // RESPONSE packet
+				setFrameId(payload.readByte());
+			}
 			payload.readBytes(serialAddress, 0, 8);
-			payload.readBytes(sourceNetworkAddress,0,2);
+			payload.readBytes(sourceNetworkAddress, 0, 2);
+			if (frameType == (byte) 0x97) { // RESPONSE packet
+				atCommand[0] = payload.readByte();
+				atCommand[1] = payload.readByte();
+			}
 			setReceiveOpts(payload.readByte());
 			setNumberOfSampleSets(payload.readByte());
 			setDigitalChannelMask(payload.readShort());
@@ -60,6 +71,34 @@ public class XBeePacket {
 
 	public byte[] getSerialAddress() {
 		return serialAddress;
+	}
+
+	public Long getSerialAddressAsLong() {
+		ByteBuf buf = Unpooled.wrappedBuffer(serialAddress);
+		return buf.readLong();
+	}
+
+	public Short geNetworkSerialAddressAsLong() {
+		ByteBuf buf = Unpooled.wrappedBuffer(sourceNetworkAddress);
+		return buf.readShort();
+	}
+
+	public String getSourceNetworkSerialAddressAsHexString() {
+		ByteBuf buf = Unpooled.wrappedBuffer(sourceNetworkAddress);
+		StringBuilder sb = new StringBuilder();
+		for (byte c : buf.array()) {
+			sb.append(String.format("%02x", c).toUpperCase());
+		}
+		return sb.toString();
+	}
+
+	public String getSerialAddressAsHexString() {
+		ByteBuf buf = Unpooled.wrappedBuffer(serialAddress);
+		StringBuilder sb = new StringBuilder();
+		for (byte c : buf.array()) {
+			sb.append(String.format("%02x", c).toUpperCase());
+		}
+		return sb.toString();
 	}
 
 	public void setSerialAddress(byte[] serialAddress) {
@@ -138,6 +177,18 @@ public class XBeePacket {
 		this.checkSum = checkSum;
 	}
 
+	public byte getFrameId() {
+		return frameId;
+	}
+
+	public void setFrameId(byte frameId) {
+		this.frameId = frameId;
+	}
+
+	public byte[] getAtCommand() {
+		return atCommand;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -145,10 +196,10 @@ public class XBeePacket {
 		builder.append(length);
 		builder.append(", frameType=");
 		builder.append(String.format("%02x", frameType));
-//		builder.append(", serialAddress=");
-//		builder.append(String.format("%02x", serialAddress));
-//		builder.append(", sourceNetworkAddress=");
-//		builder.append(String.format("%02x", sourceNetworkAddress));
+		builder.append(", serialAddress=");
+		builder.append(getSerialAddressAsHexString());
+		builder.append(", sourceNetworkAddress=");
+		builder.append(getSourceNetworkSerialAddressAsHexString());
 		builder.append(", receiveOpts=");
 		builder.append(receiveOpts);
 		builder.append(", numberOfSampleSets=");

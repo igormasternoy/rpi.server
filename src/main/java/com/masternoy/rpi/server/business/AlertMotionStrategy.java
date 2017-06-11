@@ -1,17 +1,14 @@
 package com.masternoy.rpi.server.business;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.masternoy.rpi.server.ConnectionManager;
+import com.masternoy.rpi.server.DeviceCommandQueuer;
 import com.masternoy.rpi.server.protocol.Constants;
 import com.masternoy.rpi.server.protocol.XBeeCommandRequest;
+import com.masternoy.rpi.server.protocol.XBeeCommandRequestListener;
 import com.masternoy.rpi.server.protocol.XBeePacket;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
  * If motion sensor triggered switch sleeping mode to pin wake up; Switch back
@@ -21,15 +18,20 @@ import io.netty.buffer.Unpooled;
  *
  */
 @Singleton
-public class AlertMotionStrategy {
+public class AlertMotionStrategy implements Strategy {
+	private static final int REPEAT_MESSAGE_TIMES = 3;
+
+	private static final Logger log = Logger.getLogger(DeviceCommandQueuer.class);
+
 	@Inject
-	ConnectionManager connectionManager;
+	DeviceCommandQueuer commandQueuer;
 
 	/**
 	 * Currently for each packet send on/off DIO3
 	 * 
 	 * @param packet
 	 */
+	@Override
 	public void process(XBeePacket packet) {
 		boolean isOn = (packet.getDigitalSampleData() & Constants.PinSamplesMask.DIO3) == Constants.PinSamplesMask.DIO3;
 		XBeeCommandRequest cmdReq = new XBeeCommandRequest();
@@ -44,8 +46,28 @@ public class AlertMotionStrategy {
 		} else {
 			cmdReq.setCmdParam((byte) 0x05);
 		}
-		// TODO use message queue?
-		connectionManager.writeToChannel(cmdReq);
+
+		XBeeCommandRequestListener listener = new XBeeCommandRequestListener(cmdReq) {
+			int repeatCounter = 0;
+
+			@Override
+			public void onSuccess(XBeePacket packet) {
+				log.debug("Received response for command" + cmdReq);
+			}
+
+			@Override
+			public void onFailed(boolean wasEvicted) {
+				if (wasEvicted) {
+					log.warn("TIMEOUT waiting for response try Num" + repeatCounter + " command" + cmdReq);
+					repeatCounter++;
+					if (repeatCounter < REPEAT_MESSAGE_TIMES) {
+						commandQueuer.put(this);
+					}
+				}
+			}
+		};
+		commandQueuer.put(listener);
+
 	}
 
 }

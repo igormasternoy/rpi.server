@@ -72,7 +72,7 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 				// PACKET IS NOT FULL
 				return null;
 			}
-			int length = packet.getLength(); //checkSumByte
+			int length = packet.getLength(); //length + checkSumByte
 			ByteBuf buf = Unpooled.buffer(length);
 			buffer.readBytes(buf, 0, length);
 			buf.writerIndex(length);
