@@ -17,6 +17,18 @@ import io.netty.buffer.Unpooled;
 public class Test {
 
 	public static void main(String[] args) throws UnsupportedEncodingException, DecoderException {
+		byte[] b = new byte[]{0x00,0x00,0x00,0x00,0x00,0x00,(byte) 0xFF,(byte) 0xFF};
+		ByteBuf buf = Unpooled.wrappedBuffer(b);
+		long l = buf.readLong();
+		ByteBuf out = Unpooled.buffer(8);
+		out.writeLong(l);
+		
+		System.out.print("Byte array: ");
+		for (byte c : out.array()) {
+			System.out.print(String.format("%02x", c).toUpperCase());
+		}
+		System.out.println(" Long value: "+l);
+		
 //		XBeeCommandRequest cmdReq = process(null);
 //		byte[] bts = new byte[payload.writerIndex()];
 //		payload.readBytes(bts);
