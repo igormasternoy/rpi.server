@@ -10,7 +10,6 @@ import io.netty.channel.rxtx.RxtxChannel;
 public class ConnectionManager {
 	
 	RxtxChannel ctx;
-	
 
 	public void setCtx(RxtxChannel ctx) {
 		this.ctx = ctx;

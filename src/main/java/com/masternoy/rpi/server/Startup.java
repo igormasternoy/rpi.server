@@ -44,7 +44,6 @@ public class Startup {
 					ch.pipeline().addLast(//
 							new XBeeProtocolReader(), //
 							new XBeeProtocolWriter(),
-//							new StringDecoder(), //
 							factory.getPacketHandler());
 				}
 			});

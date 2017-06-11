@@ -9,7 +9,6 @@ import io.netty.buffer.Unpooled;
 
 public class XBeeCommandRequest {
 	
-	private short length =-1;
 	private byte frameType=-1;
 	private byte frameId =-1;
 	//address is 64-bit array
@@ -20,9 +19,6 @@ public class XBeeCommandRequest {
 	private byte[] atCmdName= new byte[2];
 	private byte cmdParam = -1;
 	
-	public short getLength() {
-		return (short) getPayload().readableBytes();
-	}
 	public byte getFrameType() {
 		return frameType;
 	}
@@ -66,19 +62,6 @@ public class XBeeCommandRequest {
 		this.cmdParam = cmdParam;
 	}
 	
-	public ByteBuf getPayload() {
-		ByteBuf byteBuf = Unpooled.buffer(16);//16 Is default
-		byteBuf.writeByte(frameType);
-		byteBuf.writeByte(frameId);
-		byteBuf.writeBytes(destAddress);
-		byteBuf.writeBytes(destNetworkAddress);
-		byteBuf.writeByte(remoteCmdOpt);
-		byteBuf.writeByte(atCmdName[0]);
-		byteBuf.writeByte(atCmdName[1]);
-		byteBuf.writeByte(cmdParam);
-		return byteBuf;
-	}
-	
 	public static byte getCheckSum(byte[] bts) {
 		short sum = 0;
 		for (byte b : bts) {
@@ -86,30 +69,31 @@ public class XBeeCommandRequest {
 		}
 		return (byte) (0xFF - (sum & 0xFF));
 	}
-	
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("XBeeCommandRequest");
-		builder.append(" payload: ");
-		builder.append(Hex.encodeHexString(getPayload().array()));
-		builder.append(" [length=");
-		builder.append(length);
-		builder.append(", frameType=");
-		builder.append(String.format("%02x",frameType));
+		builder.append("XBeeCommandRequest [frameType=");
+		builder.append(frameType);
 		builder.append(", frameId=");
-		builder.append(String.format("%02x",frameId));
+		builder.append(frameId);
 		builder.append(", destAddress=");
-		builder.append(String.format("%02x",destAddress));
+		for (byte b : destAddress) {
+			builder.append(String.format("%02x", b).toUpperCase());
+		}
 		builder.append(", destNetworkAddress=");
-		builder.append(String.format("%02x",destNetworkAddress));
+		for (byte b : destNetworkAddress) {
+			builder.append(String.format("%02x", b).toUpperCase());
+		}
+		builder.append(Arrays.toString(destNetworkAddress));
 		builder.append(", remoteCmdOpt=");
-		builder.append(String.format("%02x",remoteCmdOpt));
+		builder.append(remoteCmdOpt);
 		builder.append(", atCmdName=");
 		builder.append(Arrays.toString(atCmdName));
 		builder.append(", cmdParam=");
-		builder.append(String.format("%02x",cmdParam));
+		builder.append(cmdParam);
 		builder.append("]");
 		return builder.toString();
 	}
+	
+	
 }

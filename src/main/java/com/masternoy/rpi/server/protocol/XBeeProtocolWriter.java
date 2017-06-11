@@ -21,17 +21,22 @@ public class XBeeProtocolWriter extends MessageToByteEncoder<XBeeCommandRequest>
 	@Override
 	protected void encode(ChannelHandlerContext ctx, XBeeCommandRequest msg, ByteBuf out) throws Exception {
 		out.writeByte(SIGNATURE);
-		byte[] bytes = new byte[msg.getPayload().writerIndex()];
-		msg.getPayload().readBytes(bytes);
+		ByteBuf byteBuf = Unpooled.buffer(16);// 16 Is default
+		byteBuf.writeByte(msg.getFrameType());
+		byteBuf.writeByte(msg.getFrameId());
+		byteBuf.writeBytes(msg.getDestAddress());
+		byteBuf.writeBytes(msg.getDestNetworkAddress());
+		byteBuf.writeByte(msg.getRemoteCmdOpt());
+		byteBuf.writeByte(msg.getAtCmdName()[0]);
+		byteBuf.writeByte(msg.getAtCmdName()[1]);
+		byteBuf.writeByte(msg.getCmdParam());
+		byte[] bytes = new byte[byteBuf.writerIndex()];
+		byteBuf.readBytes(bytes);
 		out.writeShort(bytes.length);
 		out.writeBytes(bytes);
 		out.writeByte(XBeeCommandRequest.getCheckSum(bytes));
 		
-		StringBuilder sb = new StringBuilder();
-		for (byte b : bytes) {
-			sb.append(String.format("%02x", b).toUpperCase());
-		}
-		log.debug("Message send with payload : " + sb.toString());
+		log.debug("Message send with payload : " + msg.toString());
 	}
 
 }

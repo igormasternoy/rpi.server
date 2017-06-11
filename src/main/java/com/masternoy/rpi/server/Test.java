@@ -17,20 +17,19 @@ import io.netty.buffer.Unpooled;
 public class Test {
 
 	public static void main(String[] args) throws UnsupportedEncodingException, DecoderException {
-		XBeeCommandRequest cmdReq = process(null);
-		ByteBuf payload = cmdReq.getPayload();
-		byte[] bts = new byte[payload.writerIndex()];
-		payload.readBytes(bts);
-		ByteBuf out = Unpooled.buffer(18,20);
-		out.writeByte(SIGNATURE);
-		out.writeShort(bts.length);
-		out.writeBytes(bts);
-		out.writeByte(cmdReq.getCheckSum(bts));
-		
-		
-		for (byte b : out.array()) {
-			System.out.print(String.format("%02x", b).toUpperCase());
-		}
+//		XBeeCommandRequest cmdReq = process(null);
+//		byte[] bts = new byte[payload.writerIndex()];
+//		payload.readBytes(bts);
+//		ByteBuf out = Unpooled.buffer(18,20);
+//		out.writeByte(SIGNATURE);
+//		out.writeShort(bts.length);
+//		out.writeBytes(bts);
+//		out.writeByte(cmdReq.getCheckSum(bts));
+//		
+//		
+//		for (byte b : out.array()) {
+//			System.out.print(String.format("%02x", b).toUpperCase());
+//		}
 
 		// System.out.println(sb.toString());
 		// System.out.println(Integer.toHexString( (0xFF - ((0x17 + 0xFF + 0xFF
