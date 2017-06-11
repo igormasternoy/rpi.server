@@ -10,7 +10,8 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 
 /**
- * Writing messages @see XBeeCommandRequests back to serial port
+ * Writing messages @see XBeeCommandRequest back to serial port
+ * 
  * 
  * @author imasternoy
  *

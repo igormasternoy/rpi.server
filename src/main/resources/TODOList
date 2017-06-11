@@ -12,3 +12,5 @@ for (byte c : out.array()) {
 System.out.println(" Long value: "+l);
 
 - Parse the response from the device base on FrameId
+
+- Add disruptor to process packets

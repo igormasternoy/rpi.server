@@ -21,6 +21,7 @@ public class XBeePacketStrategyHandler extends SimpleChannelInboundHandler<XBeeP
 	public void channelRead0(ChannelHandlerContext ctx, XBeePacket msg) throws Exception {
 		log.info("Serial port message received: " + msg);
 		strategies.forEach(strat -> strat.process(msg));
+		//TODO [imasternoy] process strategy via separate queue and thread pool
 	}
 
 	@Override
