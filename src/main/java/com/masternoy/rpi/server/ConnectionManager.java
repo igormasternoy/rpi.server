@@ -1,7 +1,7 @@
 package com.masternoy.rpi.server;
 
+import com.digi.xbee.api.packet.common.RemoteATCommandPacket;
 import com.google.inject.Singleton;
-import com.masternoy.rpi.server.protocol.XBeeCommandRequest;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.rxtx.RxtxChannel;
@@ -19,7 +19,7 @@ public class ConnectionManager {
 		return ctx;
 	}
 	
-	ChannelFuture writeToChannel(XBeeCommandRequest command){
+	ChannelFuture writeToChannel(RemoteATCommandPacket command){
 		return ctx.writeAndFlush(command);
 	}
 

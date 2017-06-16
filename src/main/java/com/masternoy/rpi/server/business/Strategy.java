@@ -1,9 +1,9 @@
 package com.masternoy.rpi.server.business;
 
-import com.masternoy.rpi.server.protocol.XBeePacket;
+import com.digi.xbee.api.packet.XBeePacket;
 
-public interface Strategy {
+public interface Strategy<T extends XBeePacket> {
 
-	public void process(XBeePacket packet);
+	public void process(T packet);
 
 }

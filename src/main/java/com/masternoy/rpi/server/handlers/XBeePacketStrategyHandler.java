@@ -4,24 +4,37 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.digi.xbee.api.packet.common.ATCommandResponsePacket;
+import com.digi.xbee.api.packet.common.IODataSampleRxIndicatorPacket;
+import com.digi.xbee.api.packet.common.RemoteATCommandPacket;
+import com.digi.xbee.api.packet.common.RemoteATCommandResponsePacket;
 import com.google.inject.Inject;
+import com.masternoy.rpi.server.DeviceCommandQueuer;
 import com.masternoy.rpi.server.business.Strategy;
-import com.masternoy.rpi.server.protocol.XBeePacket;
+import com.masternoy.rpi.server.protocol.XBeePacketHolder;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class XBeePacketStrategyHandler extends SimpleChannelInboundHandler<XBeePacket> {
+public class XBeePacketStrategyHandler extends SimpleChannelInboundHandler<XBeePacketHolder> {
 	private static final Logger log = Logger.getLogger(XBeePacketStrategyHandler.class);
 
 	@Inject
 	Set<Strategy> strategies;
+	@Inject
+	DeviceCommandQueuer queuer;
 
 	@Override
-	public void channelRead0(ChannelHandlerContext ctx, XBeePacket msg) throws Exception {
-		log.info("Serial port message received: " + msg);
-		strategies.forEach(strat -> strat.process(msg));
-		//TODO [imasternoy] process strategy via separate queue and thread pool
+	public void channelRead0(ChannelHandlerContext ctx, XBeePacketHolder msg) throws Exception {
+		com.digi.xbee.api.packet.XBeePacket packet = msg.getPacket();
+		if (packet instanceof RemoteATCommandResponsePacket) {
+			queuer.notifyCommandResponse((RemoteATCommandResponsePacket) packet);
+		} else if (packet instanceof IODataSampleRxIndicatorPacket) {
+			log.info("Received unknown packet: "+ msg.getPacket().toPrettyString());
+//			strategies.forEach(strat -> strat.process(packet));
+		} else {
+			log.info("Received unknown packet: " + msg.getPacket().toPrettyString());
+		}
 	}
 
 	@Override

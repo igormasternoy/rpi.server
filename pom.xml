@@ -44,6 +44,12 @@
 			<artifactId>guice-multibindings</artifactId>
 			<version>4.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.digi.xbee</groupId>
+			<artifactId>xbee-java-library</artifactId>
+			<version>1.2.0</version>
+		</dependency>
+
 
 
 	</dependencies>

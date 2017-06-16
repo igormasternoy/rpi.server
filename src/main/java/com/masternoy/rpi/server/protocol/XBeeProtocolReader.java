@@ -5,6 +5,10 @@ import java.util.List;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 
+import com.digi.xbee.api.models.OperatingMode;
+import com.digi.xbee.api.packet.XBeePacketParser;
+import com.digi.xbee.api.packet.common.ATCommandResponsePacket;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -17,7 +21,7 @@ import io.netty.util.ByteProcessor;
 public class XBeeProtocolReader extends ByteToMessageDecoder {
 	private static final Logger log = Logger.getLogger(XBeeProtocolReader.class);
 
-	XBeePacket packet;
+	XBeePacketHolder packet;
 	State currentState;
 
 	private enum State {
@@ -54,7 +58,7 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 				log.trace("Not enough bytes to construct packet length");
 				return null;
 			}
-			packet = new XBeePacket();
+			packet = new XBeePacketHolder();
 			// needed for test purposes
 			byte[] low = new byte[1];
 			byte[] high = new byte[1];
@@ -62,23 +66,25 @@ public class XBeeProtocolReader extends ByteToMessageDecoder {
 			high[0] = buffer.readByte();
 			log.trace(Hex.encodeHexString(low) + "" + Hex.encodeHexString(high));
 			//Checksum is the always the last byte
-			packet.setLength((short) (assemblyShort(low[0], high[0])+1));
+			packet.setLength((short) (assemblyShort(low[0], high[0])));
 			currentState = State.READ_BODY;
 		}
 
 		if (currentState == State.READ_BODY) {
+			int length = packet.getLength() +1; //length + checkSumByte
 			// LENGTH IS KNOWN
-			if (buffer.readableBytes() < packet.getLength()) {
-				// PACKET IS NOT FULL
+			if (buffer.readableBytes() < length) {
 				return null;
 			}
-			int length = packet.getLength(); //length + checkSumByte
-			ByteBuf buf = Unpooled.buffer(length);
-			buffer.readBytes(buf, 0, length);
-			buf.writerIndex(length);
-			packet.setPayload(buf);
-			buffer.discardReadBytes();
+			ByteBuf buf = Unpooled.buffer(3+length); //1 byte - signature; 2 bytes - length
+			buf.writeByte(Constants.Protocol.SIGNATURE);
+			buf.writeShort(packet.getLength());
+			buffer.readBytes(buf, buf.writerIndex(), length);
+			XBeePacketParser parser = new XBeePacketParser();
+			com.digi.xbee.api.packet.XBeePacket parsedPacket = parser.parsePacket(buf.array(), OperatingMode.API);
+			packet.setPacket(parsedPacket);
 			currentState = State.START;
+			buffer.discardReadBytes();
 			return packet;
 		}
 		return null;
