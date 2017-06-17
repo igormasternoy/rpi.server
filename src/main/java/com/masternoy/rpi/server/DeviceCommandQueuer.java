@@ -60,6 +60,8 @@ public class DeviceCommandQueuer {
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (!future.isSuccess()) {
 					log.error("FAILED to send command " + commandListener.getRequestID() + " to the device  " + frameId);
+					commandListeners.invalidate(frameId);
+					//TODO: [imasternoy] Repeat then?
 				}
 			}
 		});

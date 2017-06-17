@@ -1,8 +1,9 @@
 package com.masternoy.rpi.server.protocol;
 
 public interface Constants {
-	public static final byte HIGH = 5;
+	public static final byte DISABLE = 0;
 	public static final byte LOW = 4;
+	public static final byte HIGH = 5;
 	
 	interface PinSamplesMask {
 		public static final short DIO1 = 0b0000000000000010;

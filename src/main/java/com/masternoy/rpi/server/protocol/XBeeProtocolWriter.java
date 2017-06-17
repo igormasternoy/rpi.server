@@ -24,7 +24,7 @@ public class XBeeProtocolWriter extends MessageToByteEncoder<RemoteATCommandPack
 	@Override
 	protected void encode(ChannelHandlerContext ctx, RemoteATCommandPacket msg, ByteBuf out) throws Exception {
 		out.writeBytes(msg.generateByteArray());
-		log.debug("Message send with payload : " + msg.toPrettyString());
+		log.debug("Message sent with payload : " + msg.toPrettyString());
 	}
 
 }

@@ -4,9 +4,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import com.digi.xbee.api.packet.common.ATCommandResponsePacket;
 import com.digi.xbee.api.packet.common.IODataSampleRxIndicatorPacket;
-import com.digi.xbee.api.packet.common.RemoteATCommandPacket;
 import com.digi.xbee.api.packet.common.RemoteATCommandResponsePacket;
 import com.google.inject.Inject;
 import com.masternoy.rpi.server.DeviceCommandQueuer;
@@ -30,8 +28,8 @@ public class XBeePacketStrategyHandler extends SimpleChannelInboundHandler<XBeeP
 		if (packet instanceof RemoteATCommandResponsePacket) {
 			queuer.notifyCommandResponse((RemoteATCommandResponsePacket) packet);
 		} else if (packet instanceof IODataSampleRxIndicatorPacket) {
-			log.info("Received unknown packet: "+ msg.getPacket().toPrettyString());
-//			strategies.forEach(strat -> strat.process(packet));
+			log.info("Received DATA packet: "+ msg.getPacket().toString());
+			strategies.forEach(strat -> strat.process(packet));
 		} else {
 			log.info("Received unknown packet: " + msg.getPacket().toPrettyString());
 		}
