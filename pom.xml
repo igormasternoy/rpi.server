@@ -53,4 +53,10 @@
 
 
 	</dependencies>
+	<parent>
+		<groupId>com.masternoy</groupId>
+		<artifactId>parent</artifactId>
+		<version>0.0.1</version>
+			<relativePath>../parent/pom.xml</relativePath>
+	</parent>
 </project>

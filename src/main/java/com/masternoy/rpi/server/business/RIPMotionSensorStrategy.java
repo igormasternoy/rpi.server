@@ -13,7 +13,7 @@ import com.masternoy.rpi.server.DeviceCommandQueuer;
 import com.masternoy.rpi.server.protocol.Constants;
 
 @Singleton
-public class RIPMotionSensorStrategy implements Strategy<IODataSampleRxIndicatorPacket> {
+public class RIPMotionSensorStrategy implements Strategy<IODataSampleRxIndicatorPacket>, AlarmStrategy {
 	private static final Logger log = Logger.getLogger(DeviceCommandQueuer.class);
 	@Inject
 	DeviceCommandQueuer commandQueuer;

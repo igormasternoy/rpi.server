@@ -55,7 +55,7 @@ public class DeviceCommandQueuer {
 		assert frameId != XBeeAPIPacket.NO_FRAME_ID;
 		
 		commandListeners.put(frameId, commandListener);
-		connectionManager.writeToChannel((RemoteATCommandPacket) commandListener.getRequest()).addListener(new ChannelFutureListener() {
+		connectionManager.writeToXBeeChannel((RemoteATCommandPacket) commandListener.getRequest()).addListener(new ChannelFutureListener() {
 			@Override
 			public void operationComplete(ChannelFuture future) throws Exception {
 				if (!future.isSuccess()) {

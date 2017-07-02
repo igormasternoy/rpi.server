@@ -9,18 +9,31 @@ import io.netty.channel.rxtx.RxtxChannel;
 @Singleton
 public class ConnectionManager {
 	
-	RxtxChannel ctx;
+	RxtxChannel xBeeCtx;
+	RxtxChannel gsmCtx;
+	
+	public void setGsmCtx(RxtxChannel ctx){
+		this.gsmCtx = ctx;
+	}
 
-	void setCtx(RxtxChannel ctx) {
-		this.ctx = ctx;
+	public void setXBeeCtx(RxtxChannel ctx) {
+		this.xBeeCtx = ctx;
 	}
 	
-	RxtxChannel getCtx() {
-		return ctx;
+	public RxtxChannel getXBeeCtx() {
+		return xBeeCtx;
 	}
 	
-	ChannelFuture writeToChannel(RemoteATCommandPacket command){
-		return ctx.writeAndFlush(command);
+	public RxtxChannel getGsmCtx() {
+		return gsmCtx;
+	}
+	
+	public ChannelFuture writeToGSMChannel(Object command){
+		return gsmCtx.writeAndFlush(command);
+	}
+	
+	public ChannelFuture writeToXBeeChannel(RemoteATCommandPacket command){
+		return xBeeCtx.writeAndFlush(command);
 	}
 
 }
